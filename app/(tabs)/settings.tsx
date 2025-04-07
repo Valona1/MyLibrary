@@ -127,6 +127,8 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     alignItems: 'center',
     marginTop: 15,
+    borderWidth: 1,
+    borderColor: '#000',
   },
   buttonText: {
     fontSize: 16,

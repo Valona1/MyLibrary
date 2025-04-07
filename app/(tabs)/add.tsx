@@ -1,20 +1,46 @@
-import { View, Text, StyleSheet, TextInput, Pressable, Alert, Image } from 'react-native';
+import {View, Text, StyleSheet, TextInput, Pressable, Alert, Image, } from 'react-native';
 import { useState } from 'react';
 import { Picker } from '@react-native-picker/picker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter } from 'expo-router';
 
 export default function AddBookScreen() {
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
   const [status, setStatus] = useState('');
 
-  const handleAddBook = () => {
+  const router = useRouter();
+
+  const handleAddBook = async () => {
     if (!title || !author || !status) {
       Alert.alert('Bitte alle Felder ausfüllen!');
       return;
     }
 
-    // nacher tuen ich das speichere da hinzufüge
-    Alert.alert('Buch hinzugefügt ✅');
+    const newBook = {
+      id: Date.now().toString(),
+      title,
+      author,
+      status,
+    };
+
+    try {
+      const storedBooks = await AsyncStorage.getItem('books');
+      const books = storedBooks ? JSON.parse(storedBooks) : [];
+      books.push(newBook);
+      await AsyncStorage.setItem('books', JSON.stringify(books));
+
+      setTitle('');
+      setAuthor('');
+      setStatus('');
+
+      Alert.alert('Buch hinzugefügt ✅');
+
+      router.replace('/');
+    } catch (error) {
+      Alert.alert('Fehler beim Speichern des Buches');
+      console.error(error);
+    }
   };
 
   return (
@@ -30,7 +56,6 @@ export default function AddBookScreen() {
         </View>
         <View style={styles.headerLine} />
       </View>
-
 
       <Text style={styles.heading}>Zur Bibliothek hinzufügen</Text>
 
@@ -54,15 +79,20 @@ export default function AddBookScreen() {
 
         <Text style={styles.label}>Status</Text>
         <View style={styles.pickerWrapper}>
-          <Picker
-            selectedValue={status}
-            onValueChange={(itemValue) => setStatus(itemValue)}
-          >
-            <Picker.Item label="Wähle deinen aktuellen Status" value="" />
-            <Picker.Item label="Noch nicht gelesen" value="unread" />
-            <Picker.Item label="Lese ich gerade" value="reading" />
-            <Picker.Item label="Fertig gelesen" value="finished" />
-          </Picker>
+        <Picker
+        selectedValue={status}
+        onValueChange={(itemValue) => setStatus(itemValue)}
+      >
+        <Picker.Item
+          label="Wähle deinen aktuellen Status"
+          value=""
+          color="#999"
+        />
+        <Picker.Item label="Will ich lesen" value="unread" />
+        <Picker.Item label="Lese ich gerade" value="reading" />
+        <Picker.Item label="Fertig gelesen" value="finished" />
+        </Picker>
+
         </View>
 
         <Pressable style={styles.button} onPress={handleAddBook}>
@@ -136,6 +166,8 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     alignItems: 'center',
     marginTop: 15,
+    borderWidth: 1,
+    borderColor: '#000',
   },
   buttonText: {
     fontSize: 16,

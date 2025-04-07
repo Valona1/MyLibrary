@@ -1,62 +1,115 @@
-import { View, Text, StyleSheet, Image, Animated, Easing } from 'react-native';
-import { useEffect, useRef } from 'react';
-import { Ionicons } from '@expo/vector-icons';
+import { View, Text, StyleSheet, Pressable, FlatList, Image,} from 'react-native';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export default function LibraryScreen() {
-  const bounceAnim = useRef(new Animated.Value(0)).current;
+type Book = {
+  id: string;
+  title: string;
+  author: string;
+  status: string;
+};
 
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(bounceAnim, {
-          toValue: -10,
-          duration: 600,
-          useNativeDriver: true,
-          easing: Easing.inOut(Easing.quad),
-        }),
-        Animated.timing(bounceAnim, {
-          toValue: 0,
-          duration: 600,
-          useNativeDriver: true,
-          easing: Easing.inOut(Easing.quad),
-        }),
-      ])
-    ).start();
-  }, []);
+export default function HomeScreen() {
+  const [books, setBooks] = useState<Book[]>([]);
+  const [filter, setFilter] = useState<string | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      const loadBooks = async () => {
+        try {
+          const storedBooks = await AsyncStorage.getItem('books');
+          const parsed = storedBooks ? JSON.parse(storedBooks) : [];
+          setBooks(parsed);
+        } catch (error) {
+          console.error('Fehler beim Laden der Bücher', error);
+        }
+      };
+
+      loadBooks();
+    }, [])
+  );
+
+  const filteredBooks = filter
+    ? books.filter((b) => b.status === filter)
+    : [];
+
+  const hasAnyBooks = books.length > 0;
 
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <Image
-          source={require('@/assets/images/icon.png')}
-          style={styles.icon}
-        />
-        <Text style={styles.headerTitle}>MyLibrary</Text>
+      <View>
+        <View style={styles.header}>
+          <Image
+            source={require('@/assets/images/icon.png')}
+            style={styles.icon}
+          />
+          <Text style={styles.headerTitle}>MyLibrary</Text>
+        </View>
+        <View style={styles.headerLine} />
       </View>
 
-      {/* Trennlinie */}
-      <View style={styles.headerLine} />
+      {hasAnyBooks ? (
+        <>
+          <Text style={styles.heading}>Meine Bücher</Text>
 
-      {/* Inhalt */}
-      <View style={styles.body}>
-        <Text style={styles.emptyText}>Keine Bücher vorhanden</Text>
-        <Text style={styles.hintText}>
-          Füge dein erstes Buch hinzu, um mit deiner Bibliothek zu starten
-        </Text>
-      </View>
+          {/* Filter-Buttons */}
+          <View style={styles.buttonRow}>
+            <Pressable
+              style={[
+                styles.filterButton,
+                filter === 'reading' && styles.activeFilter,
+              ]}
+              onPress={() => setFilter('reading')}
+            >
+              <Text>Lese ich gerade</Text>
+            </Pressable>
 
-      {/* Animierter Pfeil ganz unten */}
-        <Animated.View
-        style={{
-          transform: [{ translateY: bounceAnim }],
-          marginBottom: 20,
-          alignItems: 'center',
-        }}
-      >
-        <Ionicons name="arrow-down" size={40} color="#000" />
-      </Animated.View>
+            <Pressable
+              style={[
+                styles.filterButton,
+                filter === 'unread' && styles.activeFilter,
+              ]}
+              onPress={() => setFilter('unread')}
+            >
+              <Text>Will ich lesen</Text>
+            </Pressable>
 
+            <Pressable
+              style={[
+                styles.filterButton,
+                filter === 'finished' && styles.activeFilter,
+              ]}
+              onPress={() => setFilter('finished')}
+            >
+              <Text>Gelesen</Text>
+            </Pressable>
+          </View>
+
+          {filteredBooks.length === 0 ? (
+            <Text style={styles.emptyText}>Keine Bücher vorhanden</Text>
+          ) : (
+            <FlatList
+              data={filteredBooks}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <View style={styles.bookCard}>
+                  <Text style={styles.bookTitle}>{item.title}</Text>
+                  <Text style={styles.bookAuthor}>von {item.author}</Text>
+                </View>
+              )}
+            />
+          )}
+        </>
+      ) : (
+        <View style={styles.body}>
+          <Text style={styles.emptyText}>Keine Bücher vorhanden</Text>
+          <Text style={styles.hintText}>
+            Füge dein erstes Buch hinzu, um mit deiner Bibliothek zu starten
+          </Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -64,20 +117,14 @@ export default function LibraryScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
-    paddingTop: 50,
+    backgroundColor: '#fff',
     paddingHorizontal: 20,
-    justifyContent: 'space-between',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  headerLine: {
-    height: 2,
-    backgroundColor: '#a1837a',
+    marginTop: 50,
     marginBottom: 10,
   },
   icon: {
@@ -90,8 +137,32 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginRight: 15,
   },
-  spacer: {
+  headerLine: {
+    height: 2,
+    backgroundColor: '#a1837a',
+    marginBottom: 10,
+  },
+  heading: {
+    fontSize: 25,
+    fontWeight: 'bold',
+    marginTop: 50,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 30,
+    gap: 8,
+  },
+  filterButton: {
     flex: 1,
+    padding: 10,
+    backgroundColor: '#ade8f4',
+    borderRadius: 6,
+    alignItems: 'center',
+    marginTop: 50,
+  },
+  activeFilter: {
+    backgroundColor: '#5fa8d3',
   },
   body: {
     flex: 1,
@@ -99,21 +170,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyText: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 20,
+    marginTop: 20,
+    textAlign: 'center',
   },
   hintText: {
     fontSize: 16,
     color: '#555',
     textAlign: 'center',
     paddingHorizontal: 10,
-    marginTop: 50
   },
-  arrow: {
-    fontSize: 36,
-    textAlign: 'center',
-    marginBottom: 20,
-    color: '#000', // schwarz
+  bookCard: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+    paddingVertical: 15,
+  },
+  bookTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  bookAuthor: {
+    fontSize: 14,
+    color: '#555',
   },
 });

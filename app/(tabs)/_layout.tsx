@@ -7,6 +7,7 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import TabBarBackground from '@/components/ui/TabBarBackground';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -34,10 +35,21 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="explore"
+      name="add"
+      options={{
+        title: 'Buch hinzufügen	',
+        tabBarIcon: ({ color }) => (
+          <Ionicons name="add-circle" size={28} color={color} />
+        ),
+      }}
+    />
+      <Tabs.Screen
+        name="settings"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: 'Einstellungen',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="settings-sharp" size={size} color={color} />
+          ),
         }}
       />
     </Tabs>

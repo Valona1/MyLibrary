@@ -1,74 +1,119 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import { View, Text, StyleSheet, Image, Animated, Easing } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { Ionicons } from '@expo/vector-icons';
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+export default function LibraryScreen() {
+  const bounceAnim = useRef(new Animated.Value(0)).current;
 
-export default function HomeScreen() {
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(bounceAnim, {
+          toValue: -10,
+          duration: 600,
+          useNativeDriver: true,
+          easing: Easing.inOut(Easing.quad),
+        }),
+        Animated.timing(bounceAnim, {
+          toValue: 0,
+          duration: 600,
+          useNativeDriver: true,
+          easing: Easing.inOut(Easing.quad),
+        }),
+      ])
+    ).start();
+  }, []);
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
         <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
+          source={require('@/assets/images/icon.png')}
+          style={styles.icon}
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+        <Text style={styles.headerTitle}>MyLibrary</Text>
+      </View>
+
+      {/* Trennlinie */}
+      <View style={styles.headerLine} />
+
+      {/* Inhalt */}
+      <View style={styles.body}>
+        <Text style={styles.emptyText}>Keine Bücher vorhanden</Text>
+        <Text style={styles.hintText}>
+          Füge dein erstes Buch hinzu, um mit deiner Bibliothek zu starten
+        </Text>
+      </View>
+
+      {/* Animierter Pfeil ganz unten */}
+        <Animated.View
+        style={{
+          transform: [{ translateY: bounceAnim }],
+          marginBottom: 20,
+          alignItems: 'center',
+        }}
+      >
+        <Ionicons name="arrow-down" size={40} color="#000" />
+      </Animated.View>
+
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+    backgroundColor: 'white',
+    paddingTop: 50,
+    paddingHorizontal: 20,
+    justifyContent: 'space-between',
+  },
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'space-between',
+    marginBottom: 10,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  headerLine: {
+    height: 2,
+    backgroundColor: '#a1837a',
+    marginBottom: 10,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  icon: {
+    width: 40,
+    height: 40,
+    marginLeft: 15,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginRight: 15,
+  },
+  spacer: {
+    flex: 1,
+  },
+  body: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  hintText: {
+    fontSize: 16,
+    color: '#555',
+    textAlign: 'center',
+    paddingHorizontal: 10,
+    marginTop: 50
+  },
+  arrow: {
+    fontSize: 36,
+    textAlign: 'center',
+    marginBottom: 20,
+    color: '#000', // schwarz
   },
 });

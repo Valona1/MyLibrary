@@ -3,6 +3,12 @@
 Willkommen zu meiner Mobile-App **MyLibrary** – einer App zum Verwalten von persönlichen Büchern.  
 Die App wurde im Rahmen des Moduls 335 entwickelt.
 
+## MyLibrary App Download
+
+Lade dir die APK-Datei direkt herunter und installiere sie auf deinem Android-Gerät:
+
+[Download APK](https://github.com/Valona1/MyLibrary/blob/main/apk/MyLibrary.apk)
+
 ## Funktionen
 
 - Bücher hinzufügen mit Titel, Autor und Lesestatus

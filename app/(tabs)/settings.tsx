@@ -1,64 +1,76 @@
-import {View, Text, StyleSheet, Switch, Pressable, Alert, Image,} from 'react-native';
+import { View, Text, StyleSheet, Switch, Pressable, Alert, Image } from 'react-native';
 import { useState } from 'react';
 import { Picker } from '@react-native-picker/picker';
+import { scheduleReminderAfterMinutes } from '@/lib/notifications';
 
 export default function SettingsScreen() {
   const [enabled, setEnabled] = useState(false);
-  const [time, setTime] = useState('');
+  const [minutes, setMinutes] = useState('5');
 
-  const toggleSwitch = () => setEnabled(!enabled);
+  const toggleSwitch = () => {
+    setEnabled(prev => !prev);
+  };
 
-  const handleSave = () => {
-    if (enabled && !time) {
-      Alert.alert('Bitte eine Zeit auswählen!');
+  const handleSave = async () => {
+    if (!enabled) {
+      Alert.alert('Benachrichtigung deaktiviert ❌');
       return;
     }
 
-    // später tuen ich speichere
-    Alert.alert('Erinnerung gespeichert ✅');
+    const min = parseInt(minutes);
+    if (isNaN(min)) {
+      Alert.alert('Ungültige Zeitangabe!');
+      return;
+    }
+
+    await scheduleReminderAfterMinutes(min);
   };
 
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View>
-        <View style={styles.header}>
-          <Image
-            source={require('@/assets/images/icon.png')}
-            style={styles.icon}
-          />
-          <Text style={styles.headerTitle}>MyLibrary</Text>
-        </View>
-        <View style={styles.headerLine} />
+      <View style={styles.header}>
+        <Image
+          source={require('@/assets/images/icon.png')}
+          style={styles.icon}
+        />
+        <Text style={styles.headerTitle}>MyLibrary</Text>
       </View>
-
+      <View style={styles.headerLine} />
 
       <Text style={styles.heading}>Einstellungen</Text>
 
       {/* Formularbereich */}
       <View style={styles.formArea}>
         <View style={styles.row}>
-          <Text style={styles.label}>Tägliche Leseerinnerung aktivieren:</Text>
+          <Text style={styles.label}>Leseerinnerung aktivieren:</Text>
           <Switch value={enabled} onValueChange={toggleSwitch} />
         </View>
 
-        <Text style={styles.label}>Zeit</Text>
+        <Text style={styles.label}>Zeit auswählen</Text>
         <View style={styles.pickerWrapper}>
           <Picker
-            selectedValue={time}
-            onValueChange={(itemValue) => setTime(itemValue)}
+            selectedValue={minutes}
+            onValueChange={(val) => setMinutes(val)}
             enabled={enabled}
           >
-            <Picker.Item label="Wähle die Zeit deiner Leseerinnerung aus" value="" />
-            <Picker.Item label="08:00" value="08:00" />
-            <Picker.Item label="12:00" value="12:00" />
-            <Picker.Item label="18:00" value="18:00" />
-            <Picker.Item label="20:00" value="20:00" />
+            <Picker.Item label="In 1 Minute" value="1" />
+            <Picker.Item label="In 5 Minuten" value="5" />
+            <Picker.Item label="In 30 Minuten" value="30" />
+            <Picker.Item label="In 1 Stunde" value={(60).toString()} />
+            <Picker.Item label="In 2 Stunden" value={(60 * 2).toString()} />
+            <Picker.Item label="In 3 Stunden" value={(60 * 3).toString()} />
+            <Picker.Item label="In 4 Stunden" value={(60 * 4).toString()} />
+            <Picker.Item label="In 5 Stunden" value={(60 * 5).toString()} />
           </Picker>
         </View>
 
-        <Pressable style={styles.button} onPress={handleSave}>
-          <Text style={styles.buttonText}>Erinnerung Speichern</Text>
+        <Pressable
+          style={[styles.button, { opacity: enabled ? 1 : 0.5 }]}
+          onPress={handleSave}
+          disabled={!enabled}
+        >
+          <Text style={styles.buttonText}>Erinnerung speichern</Text>
         </Pressable>
       </View>
     </View>
@@ -97,12 +109,12 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginTop: 50,
+    marginTop: 40,
   },
   formArea: {
     flex: 1,
     justifyContent: 'center',
-    paddingBottom: 120,
+    paddingBottom: 100,
   },
   row: {
     flexDirection: 'row',

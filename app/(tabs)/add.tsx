@@ -1,15 +1,29 @@
-import {View, Text, StyleSheet, TextInput, Pressable, Alert, Image, } from 'react-native';
+import { View, Text, StyleSheet, TextInput, Pressable, Alert, Image, } from 'react-native';
 import { useState } from 'react';
 import { Picker } from '@react-native-picker/picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSequence,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 
 export default function AddBookScreen() {
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
   const [status, setStatus] = useState('');
+  const [showCheck, setShowCheck] = useState(false);
 
   const router = useRouter();
+
+  // Animation
+  const scale = useSharedValue(1);
+  const animatedButtonStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
 
   const handleAddBook = async () => {
     if (!title || !author || !status) {
@@ -34,9 +48,17 @@ export default function AddBookScreen() {
       setAuthor('');
       setStatus('');
 
-      Alert.alert('Buch hinzugefügt ✅');
+      setShowCheck(true);
+      setTimeout(() => setShowCheck(false), 1000);
 
-      router.replace('/');
+      scale.value = withSequence(
+        withSpring(0.95),
+        withSpring(1)
+      );
+
+      setTimeout(() => {
+        router.replace('/');
+      }, 1000);
     } catch (error) {
       Alert.alert('Fehler beim Speichern des Buches');
       console.error(error);
@@ -57,6 +79,7 @@ export default function AddBookScreen() {
         <View style={styles.headerLine} />
       </View>
 
+      {/* Titel */}
       <Text style={styles.heading}>Zur Bibliothek hinzufügen</Text>
 
       {/* Formular */}
@@ -79,25 +102,33 @@ export default function AddBookScreen() {
 
         <Text style={styles.label}>Status</Text>
         <View style={styles.pickerWrapper}>
-        <Picker
-        selectedValue={status}
-        onValueChange={(itemValue) => setStatus(itemValue)}
-      >
-        <Picker.Item
-          label="Wähle deinen aktuellen Status"
-          value=""
-          color="#999"
-        />
-        <Picker.Item label="Will ich lesen" value="unread" />
-        <Picker.Item label="Lese ich gerade" value="reading" />
-        <Picker.Item label="Fertig gelesen" value="finished" />
-        </Picker>
-
+          <Picker
+            selectedValue={status}
+            onValueChange={(itemValue) => setStatus(itemValue)}
+          >
+            <Picker.Item
+              label="Wähle deinen aktuellen Status"
+              value=""
+              enabled={false}
+              color="#999"
+            />
+            <Picker.Item label="Will ich lesen" value="unread" />
+            <Picker.Item label="Lese ich gerade" value="reading" />
+            <Picker.Item label="Fertig gelesen" value="finished" />
+          </Picker>
         </View>
 
-        <Pressable style={styles.button} onPress={handleAddBook}>
-          <Text style={styles.buttonText}>Hinzufügen</Text>
-        </Pressable>
+        {/* Animierter Button */}
+        <Animated.View style={animatedButtonStyle}>
+          <Pressable style={styles.button} onPress={handleAddBook}>
+            <Text style={styles.buttonText}>Hinzufügen</Text>
+          </Pressable>
+        </Animated.View>
+
+        {/*Erfolgs Icon */}
+        {showCheck && (
+          <Text style={styles.checkmark}>✅</Text>
+        )}
       </View>
     </View>
   );
@@ -141,11 +172,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     paddingBottom: 50,
+    alignItems: 'center',
   },
   label: {
     fontSize: 16,
     marginBottom: 5,
     fontWeight: 'bold',
+    alignSelf: 'flex-start',
   },
   input: {
     borderWidth: 1,
@@ -153,12 +186,14 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     padding: 10,
     marginBottom: 20,
+    width: '100%',
   },
   pickerWrapper: {
     borderWidth: 1,
     borderColor: '#000',
     borderRadius: 4,
     marginBottom: 30,
+    width: '100%',
   },
   button: {
     backgroundColor: '#f3e5e1',
@@ -168,9 +203,14 @@ const styles = StyleSheet.create({
     marginTop: 15,
     borderWidth: 1,
     borderColor: '#000',
+    width: 200,
   },
   buttonText: {
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  checkmark: {
+    fontSize: 40,
+    marginTop: 20,
   },
 });
